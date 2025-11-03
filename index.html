@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Scanner QR Code</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    #reader {
+      width: 300px;
+      margin-top: 20px;
+    }
+    #result {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    button {
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Scannerizza un QR Code</h2>
+  <button id="start-button">Avvia Scanner</button>
+  <button id="restart-button" disabled>Riavvia Scanner</button>
+  <button id="copy-button" disabled>Copia Risultato</button>
+  <div id="reader" style="display: none;"></div>
+  <p>Risultato: <span id="result"></span></p>
+
+  <script>
+    const startButton = document.getElementById('start-button');
+    const restartButton = document.getElementById('restart-button');
+    const copyButton = document.getElementById('copy-button');
+    const readerDiv = document.getElementById('reader');
+    const resultSpan = document.getElementById('result');
+
+    let html5QrCode;
+
+    function startScanner() {
+      readerDiv.style.display = 'block';
+      html5QrCode = new Html5Qrcode("reader");
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: 250
+        },
+        qrCodeMessage => {
+          resultSpan.innerText = qrCodeMessage;
+          restartButton.disabled = false;
+          copyButton.disabled = false;
+          html5QrCode.stop().then(() => {
+            readerDiv.style.display = 'none';
+          }).catch(err => console.error("Errore nello stop:", err));
+        },
+        errorMessage => {
+          // Ignora errori di scansione temporanei
+        }
+      ).catch(err => {
+        console.error("Errore nell'avvio dello scanner:", err);
+      });
+    }
+
+    startButton.addEventListener('click', () => {
+      startButton.disabled = true;
+      startScanner();
+    });
+
+    restartButton.addEventListener('click', () => {
+      resultSpan.innerText = '';
+      restartButton.disabled = true;
+      copyButton.disabled = true;
+      startScanner();
+    });
+
+    copyButton.addEventListener('click', () => {
+      const text = resultSpan.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Risultato copiato negli appunti!");
+      }).catch(err => {
+        console.error("Errore nella copia:", err);
+      });
+    });
+  </script>
+</body>
+</html>
